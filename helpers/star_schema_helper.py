@@ -33,4 +33,4 @@ def create_fact_measurements(df: pd.DataFrame, dim_building: pd.DataFrame, dim_t
     fact = df.merge(dim_building, left_on='Building', right_on='buildingName', how='left')
     fact = fact.merge(dim_time[['timeID', 'Timestamp']], on='Timestamp', how='left')
     fact['measurementID'] = fact.index + 1
-    return fact[['measurementID', 'buildingID', 'timeID', 'SupplyTemp', 'ReturnTemp', 'OutsideTemp', 'SetbackActive']]
+    return fact[['measurementID', 'buildingID', 'timeID', 'SupplyTemp', 'ReturnTemp', 'SupplyTempReturnTempDerivation', 'OutsideTemp', 'SetbackActive']]
