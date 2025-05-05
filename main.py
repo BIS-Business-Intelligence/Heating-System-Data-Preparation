@@ -19,28 +19,82 @@ dir_helper.create_directory(output_dir_name)
 
 print("Export of Merging dataset to 'all_buildings_merged.csv' has started.")
 b3_data.to_csv(f"{output_dir_name}all_buildings_merged.csv", index=False)
-b3_data.to_csv(f"{output_dir_name}all_buildings_merged.csv", index=False)
 print("Merged dataset exported as 'all_buildings_merged.csv'.")
 
 # -------------------------
-# Star Schema Creation
+# Data Validation
 # -------------------------
-dim_building = star_helper.create_dim_building(b3_data)
-dim_time = star_helper.create_dim_time(b3_data)
-fact_measurements = star_helper.create_fact_measurements(b3_data, dim_building, dim_time)
 
-print("Star schema CSV tables export has started.")
-dim_building.to_csv(f"{output_dir_name}dim_building.csv", index=False)
-dim_time.to_csv(f"{output_dir_name}dim_time.csv", index=False)
-fact_measurements.to_csv(f"{output_dir_name}fact_measurements.csv", index=False)
-print("Star schema CSV tables exported.")
+# Load the original source files for validation
+print("\nPerforming validation checks on merged data...")
+supply_temp = dc_helper.load_measurement(f"{input_dir_name}Building 3 supply temperature.csv", "SupplyTemp")
+return_temp = dc_helper.load_measurement(f"{input_dir_name}Building 3 return temperature.csv", "ReturnTemp")
+outside_temp = dc_helper.load_measurement(f"{input_dir_name}Building 3 outside temperature.csv", "OutsideTemp")
+ground_truth = dc_helper.load_measurement(f"{input_dir_name}Building 3 ground truth.csv", "SetbackActive")
 
-print("Start schema Excel export has started.")
-dim_time["Timestamp"] = dim_time["Timestamp"].dt.tz_localize(None)
-excel_filename = f"{output_dir_name}star_schema.xlsx"
-with pd.ExcelWriter(excel_filename) as writer:
-    dim_building.to_excel(writer, sheet_name="DIM_BUILDING", index=False)
-    dim_time.to_excel(writer, sheet_name="DIM_TIME", index=False)
-    fact_measurements.to_excel(writer, sheet_name="FACT_MEASUREMENTS", index=False)
-print(f"Star schema Excel file exported as '{excel_filename}'.")
+# Check data counts
+print(f"Rows in original supply temperature dataset: {len(supply_temp)}")
+print(f"Rows in original return temperature dataset: {len(return_temp)}")
+print(f"Rows in original outside temperature dataset: {len(outside_temp)}")
+print(f"Rows in original ground truth dataset: {len(ground_truth)}")
+print(f"Rows in merged dataset: {len(b3_data)}")
+
+# Validate presence of data from original datasets in merged dataset
+supply_sample = supply_temp.sample(min(20, len(supply_temp)))
+return_sample = return_temp.sample(min(20, len(return_temp)))
+outside_sample = outside_temp.sample(min(20, len(outside_temp)))
+ground_sample = ground_truth.sample(min(20, len(ground_truth)))
+
+print("\nValidating supply temperature sample...")
+for _, row in supply_sample.iterrows():
+    timestamp = row['Timestamp']
+    value = row['SupplyTemp']
+    merged_value = b3_data.loc[b3_data['Timestamp'] == timestamp, 'SupplyTemp'].values
+    if len(merged_value) == 0:
+        print(f"ERROR: Timestamp {timestamp} from supply dataset not found in merged data")
+    elif merged_value[0] != value:
+        print(f"ERROR: Value mismatch at {timestamp}. Original: {value}, Merged: {merged_value[0]}")
+    
+print("\nValidating return temperature sample...")
+for _, row in return_sample.iterrows():
+    timestamp = row['Timestamp']
+    value = row['ReturnTemp']
+    merged_value = b3_data.loc[b3_data['Timestamp'] == timestamp, 'ReturnTemp'].values
+    if len(merged_value) == 0:
+        print(f"ERROR: Timestamp {timestamp} from return dataset not found in merged data")
+    elif merged_value[0] != value:
+        print(f"ERROR: Value mismatch at {timestamp}. Original: {value}, Merged: {merged_value[0]}")
+
+print("\nValidating outside temperature sample...")
+for _, row in outside_sample.iterrows():
+    timestamp = row['Timestamp']
+    value = row['OutsideTemp']
+    merged_value = b3_data.loc[b3_data['Timestamp'] == timestamp, 'OutsideTemp'].values
+    if len(merged_value) == 0:
+        print(f"ERROR: Timestamp {timestamp} from outside temp dataset not found in merged data")
+    elif merged_value[0] != value:
+        print(f"ERROR: Value mismatch at {timestamp}. Original: {value}, Merged: {merged_value[0]}")
+
+print("\nValidating ground truth sample...")
+for _, row in ground_sample.iterrows():
+    timestamp = row['Timestamp']
+    value = row['SetbackActive']
+    merged_value = b3_data.loc[b3_data['Timestamp'] == timestamp, 'SetbackActive'].values
+    if len(merged_value) == 0:
+        print(f"ERROR: Timestamp {timestamp} from ground truth dataset not found in merged data")
+    elif merged_value[0] != value:
+        print(f"ERROR: Value mismatch at {timestamp}. Original: {value}, Merged: {merged_value[0]}")
+
+# Validate derivation calculation on sample
+print("\nValidating temperature derivation calculation...")
+sample_with_temps = b3_data.dropna(subset=['SupplyTemp', 'ReturnTemp']).sample(min(20, len(b3_data)))
+for _, row in sample_with_temps.iterrows():
+    supply = row['SupplyTemp']
+    return_temp = row['ReturnTemp']
+    derivation = row['SupplyTempReturnTempDerivation']
+    expected = abs(supply - return_temp)
+    if abs(derivation - expected) > 0.0001:  # Using tolerance for float comparison
+        print(f"ERROR: Derivation calculation incorrect at {row['Timestamp']}. Expected: {expected}, Got: {derivation}")
+
+print("\nValidation complete!")
 
