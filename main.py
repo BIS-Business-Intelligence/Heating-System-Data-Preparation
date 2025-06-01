@@ -30,7 +30,7 @@ print("Export of Merging dataset to 'all_buildings_merged.csv' has started.")
 dir_helper.create_directory(output_dir_name)
 b3_data.to_csv(f"{output_dir_name}building_3_merged.csv", index=False)
 b6_data.to_csv(f"{output_dir_name}building_6_merged.csv", index=False)
-b8_data.to_csv(f"{output_dir_name}building_8_merged.csv", index=False)
+b8_data.to_csv(f"{output_dir_name}building_8_merged_test_data_set.csv", index=False)
 all_buildings_data.to_csv(f"{output_dir_name}all_buildings_merged.csv", index=False)
 print("Merged dataset exported as 'all_buildings_merged.csv'.")
 
