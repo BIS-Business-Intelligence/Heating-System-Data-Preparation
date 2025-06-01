@@ -2,7 +2,8 @@ import pandas as pd
 from helpers import (
     data_cleaner_helper as dc_helper,
     star_schema_helper as star_helper,   # (left as-is even if unused)
-    directory_helper as dir_helper
+    directory_helper as dir_helper,
+    temp_fall_helper as tf_helper 
 )
 
 # ── I/O paths ─────────────────────────────────────────────────────────
@@ -55,3 +56,9 @@ print(training_df.head(5))   # quick visual sanity check
 training_path = f"{output_dir_name}training_dataset.csv"
 training_df.to_csv(training_path, index=False)
 print(f"Training dataset exported as '{training_path}'.")
+
+all_buildings_data_temp_fall = tf_helper.add_temp_fall_features(training_df)
+
+temp_fall_path = f"{output_dir_name}all_buildings_temp_fall.csv"
+all_buildings_data_temp_fall.to_csv(temp_fall_path, index=False)
+print(f"Temperature fall features exported as '{temp_fall_path}'.")
