@@ -103,7 +103,7 @@ def build_training_frame(
         events = events.sort_values("Timestamp")
         telemetry = telemetry.sort_values("Timestamp")
         
-        base_cols = ["SupplyTemp", "ReturnTemp", "OutsideTemp"]
+        base_cols = ["SupplyTemp", "ReturnTemp", "OutsideTemp", "Slope_15min"]
         
         # Skip buildings with no events
         if len(events) == 0:
@@ -137,7 +137,7 @@ def build_training_frame(
     if not result_frames:
         return pd.DataFrame(columns=[
             "Timestamp", "Building", "SupplyTemp", "ReturnTemp",
-            "SupplyTempReturnTempDerivation", "OutsideTemp", "SetbackActive"
+            "SupplyTempReturnTempDerivation", "OutsideTemp", "SetbackActive", "Slope_15min"
         ])
     
     # 6) Combine and sort final result
@@ -151,6 +151,7 @@ def build_training_frame(
         "ReturnTemp", 
         "SupplyTempReturnTempDerivation",
         "OutsideTemp",
+        "Slope_15min",
         "SetbackActive",
     ]
     return final_result[col_order].sort_values(["Building", "Timestamp"]).reset_index(drop=True)

@@ -68,7 +68,7 @@ def add_temp_fall_features(
     df: pd.DataFrame,
     *,
     resample_freq: str = "1min",       # regular grid to avoid skew
-    slope_window_min: int = 20,        # window length for OLS slope
+    slope_window_min: int = 15,        # window length for OLS slope
     peak_window_h: int = 4,            # look-back for rolling peak
     slope_thresh: float = -0.02,       # sustained downward slope [K/min]
     drop_thresh: float = 4.0,          # distance below peak [K]
@@ -112,7 +112,8 @@ def add_temp_fall_features(
         g[drop_col] = g[peak_col] - g["SupplyTemp"]
 
         # 4) Binary flag: sustained slope *and* deep enough drop
-        falling_mean = g[slope_col].rolling(30).mean()  # 30-min smoothing
+        evidence_win = slope_window_min * 2            # ← NEW: two slope windows
+        falling_mean = g[slope_col].rolling(evidence_win).mean()  # CHANGED
         g["TempFallFlag"] = (
             (falling_mean < slope_thresh) & (g[drop_col] >= drop_thresh)
         ).astype("Int8")  # Int8 keeps {0,1,NA} compact
