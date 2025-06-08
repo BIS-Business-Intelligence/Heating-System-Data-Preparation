@@ -4,7 +4,8 @@ from helpers import (
     star_schema_helper as star_helper,   # (left as-is even if unused)
     directory_helper as dir_helper,
     temp_fall_helper as tf_helper,        # ← our feature helper
-    cyclic_encoding_helper as ce_helper
+    cyclic_encoding_helper as ce_helper,
+    categorical_encoding_helper as cat_helper  # (left as-is even if unused)
 )
 
 # ── I/O paths ─────────────────────────────────────────────────────────
@@ -55,8 +56,14 @@ training_df = dc_helper.build_training_frame(
 
 # Add cyclic encoding for month, hour, and minute, then drop Timestamp
 training_df = ce_helper.add_cyclic_time_features(training_df, timestamp_col="Timestamp")
+# Add categorical encoding for month, hour, minute, day of week, and weekend
+training_df = cat_helper.add_categorical_encoding_features(training_df, timestamp_col="Timestamp")
+
+# ── Drop columns that are not needed for training ────────────────────
 if "Timestamp" in training_df.columns:
     training_df = training_df.drop(columns=["Timestamp"])
+
+training_df = training_df.drop(columns=["Building"])
 
 print(
     f"Events with label: {all_buildings_data['SetbackActive'].notna().sum()} | "
