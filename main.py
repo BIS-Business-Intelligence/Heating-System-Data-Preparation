@@ -63,7 +63,7 @@ training_df = cat_helper.add_categorical_encoding_features(training_df, timestam
 if "Timestamp" in training_df.columns:
     training_df = training_df.drop(columns=["Timestamp"])
 
-training_df = training_df.drop(columns=["Building"])
+# training_df = training_df.drop(columns=["Building"])
 
 print(
     f"Events with label: {all_buildings_data['SetbackActive'].notna().sum()} | "

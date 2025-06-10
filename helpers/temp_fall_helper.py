@@ -15,7 +15,7 @@ New columns added (all per-building):
 
 The slope is calculated with scikit-learn’s ``LinearRegression`` exactly like
 the Medium article on rolling linear regression, but wrapped in a tidy helper
-so you can adjust the window size without touching the math.
+so that the window size can be adjusted without touching the math.
 """
 
 from __future__ import annotations
